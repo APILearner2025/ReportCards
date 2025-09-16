@@ -827,6 +827,7 @@
               
               const row = document.createElement("tr");
               
+              // Fixed the template literal - added missing closing brace for deaths
               row.innerHTML = `
                 <td>
                   <div class="hero-cell">
@@ -843,7 +844,7 @@
                     <div class="kda">
                         <span class="kills">${mp.kills}</span>
                         <span class="slash">/</span>
-                        <span class="deaths">${mp.deaths</span>
+                        <span class="deaths">${mp.deaths}</span>
                         <span class="slash">/</span>
                         <span class="assists">${mp.assists}</span>
                     </div>
