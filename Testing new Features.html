@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Player Matches Analysis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background-color: rgba(26, 26, 46, 0.9);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: rgba(22, 33, 62, 0.8);
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    h1 {
+      color: #81a1c1;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    .subtitle {
+      color: #88c0d0;
+      font-size: 1.2rem;
+    }
+    
+    .input-section {
+      background-color: #2a2a3f;
+      padding: 25px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .input-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .input-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .player-input {
+      flex: 1;
+      min-width: 300px;
+      padding: 15px;
+      border: 2px solid #4c566a;
+      border-radius: 8px;
+      background-color: #3b4252;
+      color: #e0e0e0;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    .player-input:focus {
+      outline: none;
+      border-color: #81a1c1;
+      box-shadow: 0 0 0 3px rgba(129, 161, 193, 0.3);
+    }
+    
+    .player-input::placeholder {
+      color: #7a7a8c;
+    }
+    
+    .btn {
+      padding: 15px 25px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background-color: #5e81ac;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: #81a1c1;
+      transform: translateY(-2px);
+    }
+    
+    .btn-success {
+      background-color: #6e8c6e;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background-color: #81c784;
+      transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+      background-color: #bf616a;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background-color: #d08770;
+      transform: translateY(-2px);
+    }
+    
+    .player-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 25px;
+    }
+    
+    .player-card {
+      background: linear-gradient(135deg, #3b4252 0%, #434c5e 100%);
+      padding: 20px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+    }
+    
+    .player-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .player-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #5e81ac 0%, #81a1c1 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 20px;
+    }
+    
+    .player-details {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .player-name {
+      font-weight: 500;
+      color: #88c0d0;
+      margin-bottom: 5px;
+    }
+    
+    .player-uuid {
+      font-size: 12px;
+      color: #d8dee9;
+      word-break: break-all;
+    }
+    
+    .results-section {
+      background-color: #2a2a3f;
+      padding: 25px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 25px;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #3b4252 0%, #434c5e 100%);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .stat-title {
+      font-size: 14px;
+      color: #b0b0b0;
+      margin-bottom: 10px;
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 500;
+      color: #81a1c1;
+    }
+    
+    .matches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+      gap: 25px;
+      margin-top: 30px;
+    }
+    
+    .match {
+      background: linear-gradient(135deg, #3b4252 0%, #434c5e 100%);
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #4c566a;
+    }
+    
+    .match-id {
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .match-result {
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 8px;
+    }
+    
+    .win {
+      background-color: rgba(46, 125, 50, 0.3);
+      color: #81c784;
+    }
+    
+    .loss {
+      background-color: rgba(198, 40, 40, 0.3);
+      color: #e57373;
+    }
+    
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    
+    .stats-table th {
+      text-align: left;
+      padding: 12px 10px;
+      color: #b0b0b0;
+      font-weight: 500;
+      border-bottom: 2px solid #4c566a;
+    }
+    
+    .stats-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #3b4252;
+    }
+    
+    .stats-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .hero-cell {
+      display: flex;
+      align-items: center;
+    }
+    
+    .hero-cell img {
+      width: 36px;
+      height: 36px;
+      margin-right: 15px;
+      border-radius: 8px;
+    }
+    
+    .player-name {
+      font-weight: 500;
+      color: #88c0d0;
+    }
+    
+    .kda {
+      display: flex;
+      justify-content: center;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .kills {
+      color: #6e8c6e;
+      font-weight: 500;
+    }
+    
+    .deaths {
+      color: #a05b5b;
+      font-weight: 500;
+    }
+    
+    .assists {
+      color: #637ea6;
+      font-weight: 500;
+    }
+    
+    .slash {
+      color: #e0e0e0;
+      margin: 0 2px;
+    }
+    
+    .damage-number {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 50px;
+      font-size: 20px;
+      color: #81a1c1;
+    }
+    
+    .error {
+      background-color: #bf616a;
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .cs-min {
+      color: #d8a0a6;
+      font-weight: 500;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    @media (max-width: 768px) {
+      .matches-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .input-group {
+        flex-direction: column;
+      }
+      
+      .player-input {
+        min-width: unset;
+      }
+      
+      .stats-table {
+        font-size: 12px;
+      }
+      
+      .stats-table th, .stats-table td {
+        padding: 8px 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Pred.gg Team Analysis</h1>
+      <p class="subtitle">Analyze shared matches and player statistics</p>
+    </header>
+    
+    <section class="input-section">
+      <div class="input-header">
+        <h2>Player Profiles</h2>
+        <button class="btn btn-success" id="search-matches">
+          <i class="fas fa-search"></i> Search Matches
+        </button>
+      </div>
+      
+      <div class="input-group">
+        <input type="text" class="player-input" id="player-url-input" 
+               placeholder="Paste player profile URL or UUID (e.g., https://pred.gg/players/ef58bd80-b37b-4da3-af1c-bf8f7351963d)">
+        <button class="btn btn-primary" id="add-player">
+          <i class="fas fa-plus"></i> Add Player
+        </button>
+      </div>
+      
+      <div class="player-cards" id="player-cards-container">
+        <!-- Player cards will be added here dynamically -->
+      </div>
+    </section>
+    
+    <section class="results-section">
+      <div id="summary">
+        <div class="loading">Add players and click "Search Matches" to analyze</div>
+      </div>
+      <div class="matches-grid" id="matches-grid"></div>
+    </section>
+  </div>
+
+  <script>
+    // Player management
+    let playerUuids = [];
+    const playerCardsContainer = document.getElementById('player-cards-container');
+    const playerUrlInput = document.getElementById('player-url-input');
+    const addPlayerBtn = document.getElementById('add-player');
+    const searchMatchesBtn = document.getElementById('search-matches');
+
+    // Extract UUID from URL or validate UUID format
+    function extractUUID(input) {
+      // If it's a URL, extract the UUID part
+      if (input.includes('pred.gg/players/')) {
+        const parts = input.split('pred.gg/players/');
+        if (parts.length > 1) {
+          const uuidPart = parts[1].split('/')[0].split('?')[0];
+          // Validate UUID format
+          if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuidPart)) {
+            return uuidPart;
+          }
+        }
+        return null;
+      } 
+      // If it's already a UUID, validate it
+      else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input)) {
+        return input;
+      }
+      
+      return null;
+    }
+
+    // Add a player to the list
+    function addPlayer() {
+      const input = playerUrlInput.value.trim();
+      if (!input) return;
+      
+      const uuid = extractUUID(input);
+      if (!uuid) {
+        alert('Please enter a valid player profile URL or UUID format:\n\nExample: https://pred.gg/players/ef58bd80-b37b-4da3-af1c-bf8f7351963d\nOr: ef58bd80-b37b-4da3-af1c-bf8f7351963d');
+        return;
+      }
+      
+      if (playerUuids.includes(uuid)) {
+        alert('This player is already in the list');
+        return;
+      }
+      
+      if (playerUuids.length >= 5) {
+        alert('Maximum of 5 players allowed');
+        return;
+      }
+      
+      playerUuids.push(uuid);
+      renderPlayerCards();
+      playerUrlInput.value = '';
+    }
+
+    // Remove a player from the list
+    function removePlayer(uuid) {
+      playerUuids = playerUuids.filter(id => id !== uuid);
+      renderPlayerCards();
+    }
+
+    // Render player cards
+    function renderPlayerCards() {
+      playerCardsContainer.innerHTML = '';
+      
+      playerUuids.forEach(uuid => {
+        const card = document.createElement('div');
+        card.className = 'player-card';
+        card.innerHTML = `
+          <div class="player-info">
+            <div class="player-avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="player-details">
+              <div class="player-name">Player</div>
+              <div class="player-uuid">${uuid}</div>
+            </div>
+          </div>
+          <button class="btn btn-danger remove-btn" data-uuid="${uuid}">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        playerCardsContainer.appendChild(card);
+      });
+      
+      // Add event listeners to remove buttons
+      document.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          removePlayer(btn.getAttribute('data-uuid'));
+        });
+      });
+    }
+
+    // Event listeners
+    addPlayerBtn.addEventListener('click', addPlayer);
+    playerUrlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addPlayer();
+    });
+
+    // API interaction
+    const endpoint = "https://pred.gg/gql";
+    const DAYS = 20;
+
+    function getAssetPath(hash) {
+      return hash ? `https://pred.gg/assets/${hash}.webp` : '';
+    }
+
+    const query = `
+      query PlayerProfileMatches(
+        $uuid: UUID!
+        $playerMatchesOffset: Int
+        $playerMatchesLimit: Int
+        $playerMatchesFilter: PlayerMatchesFilterInput
+      ) {
+        player(by: { uuid: $uuid }) {
+          matchesPaginated(offset: $playerMatchesOffset, limit: $playerMatchesLimit, filter: $playerMatchesFilter) {
+            results {
+              match {
+                id
+                uuid
+                duration
+                gameMode
+                region
+                winningTeam
+                endTime
+                matchPlayers {
+                  player {
+                    uuid
+                    name
+                  }
+                  team
+                  kills
+                  deaths
+                  assists
+                  heroDamage
+                  totalDamageDealtToStructures
+                  totalDamageDealtToObjectives
+                  minionsKilled
+                  hero {
+                    id
+                    slug
+                    data {
+                      icon
+                      displayName
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    async function fetchGraphQL(query, variables) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, variables })
+        });
+        const json = await response.json();
+        if (json.errors) throw new Error(JSON.stringify(json.errors));
+        return json.data;
+      } catch (error) {
+        console.error("GraphQL Error:", error);
+        throw new Error("Failed to fetch data from Pred.gg API");
+      }
+    }
+
+    async function getPlayerMatches(uuid, days) {
+      const endTime = new Date().toISOString();
+      const startTime = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      let allMatches = [];
+      let offset = 0;
+      const limit = 50;
+      
+      try {
+        while (true) {
+          const data = await fetchGraphQL(query, {
+            uuid,
+            playerMatchesOffset: offset,
+            playerMatchesLimit: limit,
+            playerMatchesFilter: { timeframe: { startTime, endTime } }
+          });
+          
+          if (!data || !data.player || !data.player.matchesPaginated) break;
+          
+          const results = data.player.matchesPaginated.results;
+          if (!results.length) break;
+          
+          allMatches = allMatches.concat(results);
+          offset += limit;
+          
+          // Break if we've fetched enough matches
+          if (results.length < limit) break;
+        }
+      } catch (error) {
+        console.error(`Error fetching matches for player ${uuid}:`, error);
+        throw error;
+      }
+      
+      return allMatches;
+    }
+
+    async function getSharedMatches(playerUuids, days) {
+      try {
+        const allPlayerMatches = await Promise.all(
+          playerUuids.map(uuid => getPlayerMatches(uuid, days).catch(e => {
+            console.error(`Failed to get matches for ${uuid}:`, e);
+            return [];
+          }))
+        );
+        
+        const matchMap = new Map();
+        let totalSearched = 0;
+        
+        for (const matches of allPlayerMatches) {
+          totalSearched += matches.length;
+          for (const { match } of matches) {
+            if (!matchMap.has(match.uuid)) {
+              matchMap.set(match.uuid, []);
+            }
+            matchMap.get(match.uuid).push(match);
+          }
+        }
+        
+        const sharedMatches = [];
+        for (const [uuid, matches] of matchMap) {
+          if (matches.length === playerUuids.length) {
+            const teams = matches[0].matchPlayers
+              .filter(mp => playerUuids.includes(mp.player.uuid))
+              .map(mp => mp.team);
+            
+            if (teams.every(t => t === teams[0])) {
+              sharedMatches.push(matches[0]);
+            }
+          }
+        }
+        
+        return { sharedMatches, totalSearched };
+      } catch (error) {
+        console.error("Error getting shared matches:", error);
+        throw error;
+      }
+    }
+
+    // Format time from seconds to MM:SS
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Calculate CS per minute
+    function calculateCSperMin(minionsKilled, durationInSeconds) {
+      const minutes = durationInSeconds / 60;
+      return minutes > 0 ? (minionsKilled / minutes).toFixed(1) : "0.0";
+    }
+
+    // Execute the data fetching and display
+    function loadMatches() {
+      if (playerUuids.length === 0) {
+        alert('Please add at least one player');
+        return;
+      }
+      
+      const summaryContainer = document.getElementById("summary");
+      summaryContainer.innerHTML = '<div class="loading">Loading match data... This may take a while</div>';
+      
+      getSharedMatches(playerUuids, DAYS).then(({ sharedMatches, totalSearched }) => {
+        let totalKills = 0, totalDeaths = 0, totalAssists = 0;
+        let totalHeroDamage = 0, totalStructureDamage = 0, totalObjectiveDamage = 0;
+        let totalCreepScore = 0, totalMatchDuration = 0;
+
+        sharedMatches.forEach(match => {
+          totalMatchDuration += match.duration;
+          
+          match.matchPlayers
+            .filter(mp => playerUuids.includes(mp.player.uuid))
+            .forEach(mp => {
+              totalKills += mp.kills;
+              totalDeaths += mp.deaths;
+              totalAssists += mp.assists;
+              totalHeroDamage += mp.heroDamage;
+              totalStructureDamage += mp.totalDamageDealtToStructures;
+              totalObjectiveDamage += mp.totalDamageDealtToObjectives;
+              totalCreepScore += mp.minionsKilled;
+            });
+        });
+
+        // Calculate average CS per minute
+        const totalMinutes = totalMatchDuration / 60;
+        const averageCSperMin = totalMinutes > 0 ? (totalCreepScore / totalMinutes).toFixed(1) : "0.0";
+
+        summaryContainer.innerHTML = `
+          <h2>Analysis Results</h2>
+          <p>Timeframe: last ${DAYS} days</p>
+          <p>Shared matches found: ${sharedMatches.length}</p>
+          <p>Total matches searched: ${totalSearched}</p>
+          <p>Total K/D/A: ${totalKills}/${totalDeaths}/${totalAssists}</p>
+          
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-title">Total Hero Damage</div>
+              <div class="stat-value">${totalHeroDamage.toLocaleString()}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Total Structure Damage</div>
+              <div class="stat-value">${totalStructureDamage.toLocaleString()}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Total Objective Damage</div>
+              <div class="stat-value">${totalObjectiveDamage.toLocaleString()}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Average CS/min</div>
+              <div class="stat-value">${averageCSperMin}</div>
+            </div>
+          </div>
+        `;
+
+        const grid = document.getElementById("matches-grid");
+        grid.innerHTML = '';
+        
+        if (sharedMatches.length === 0) {
+          grid.innerHTML = '<div class="loading">No shared matches found for the selected players</div>';
+          return;
+        }
+        
+        sharedMatches.forEach(match => {
+          // Determine if the team won
+          const playerTeam = match.matchPlayers.find(mp => 
+            playerUuids.includes(mp.player.uuid)
+          ).team;
+          
+          const isWin = match.winningTeam === playerTeam;
+          const resultClass = isWin ? 'win' : 'loss';
+          const resultIcon = isWin ? 'fa-check-circle' : 'fa-times-circle';
+          const resultText = isWin ? 'VICTORY' : 'DEFEAT';
+
+          const matchDiv = document.createElement("div");
+          matchDiv.className = "match";
+          
+          matchDiv.innerHTML = `
+            <div class="match-header">
+              <div class="match-id">
+                <a href="https://pred.gg/matches/${match.uuid}" target="_blank">${match.uuid}</a>
+                <div>${formatTime(match.duration)} • ${match.gameMode}</div>
+              </div>
+              <div class="match-result ${resultClass}">
+                <i class="fas ${resultIcon}"></i>
+                <span style="margin-left: 6px;">${resultText}</span>
+              </div>
+            </div>
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>K/D/A</th>
+                  <th>Hero Dmg</th>
+                  <th>Struct Dmg</th>
+                  <th>Obj Dmg</th>
+                  <th>CS (CS/min)</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          `;
+
+          const tbody = matchDiv.querySelector('tbody');
+          
+          match.matchPlayers
+            .filter(mp => playerUuids.includes(mp.player.uuid))
+            .forEach(mp => {
+              const hero = mp.hero.data;
+              const csPerMin = calculateCSperMin(mp.minionsKilled, match.duration);
+              
+              const row = document.createElement("tr");
+              
+              row.innerHTML = `
+                <td>
+                  <div class="hero-cell">
+                    <a href="https://pred.gg/heroes/${mp.hero.slug}" target="_blank">
+                      <img src="${getAssetPath(hero.icon)}" alt="${hero.displayName}">
+                    </a>
+                    <div>
+                      <a class="player-name" href="https://pred.gg/players/${mp.player.uuid}" target="_blank">${mp.player.name}</a>
+                      <div style="font-size: 12px; color: #b0b0b0;">${hero.displayName}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="kda">
+                  <span class="kills">${mp.kills}</span>
+                  <span class="slash">/</span>
+                  <span class="deaths">${mp.deaths}</span>
+                  <span class="slash">/</span>
+                  <span class="assists">${mp.assists}</span>
+                </td>
+                <td class="damage-number">${mp.heroDamage.toLocaleString()}</td>
+                <td class="damage-number">${mp.totalDamageDealtToStructures.toLocaleString()}</td>
+                <td class="damage-number">${mp.totalDamageDealtToObjectives.toLocaleString()}</td>
+                <td class="damage-number">
+                  ${mp.minionsKilled.toLocaleString()}
+                  <div class="cs-min">(${csPerMin}/min)</div>
+                </td>
+              `;
+              
+              tbody.appendChild(row);
+            });
+
+          grid.appendChild(matchDiv);
+        });
+      }).catch(err => {
+        document.getElementById("summary").innerHTML = `
+          <div class="error">
+            <h3>Error Loading Data</h3>
+            <p>${err.message}</p>
+            <p>Please check that the player UUIDs are correct and try again.</p>
+          </div>
+        `;
+        console.error(err);
+      });
+    }
+
+    // Add event listener for the search button
+    searchMatchesBtn.addEventListener('click', loadMatches);
+
+    // Initialize with some example players if needed
+    // playerUuids = [
+    //   "c11d9836-d777-4752-8c77-8ae2c0d35ab2",
+    //   "394737c4-f8f3-4c70-8dec-71908e7ff60f"
+    // ];
+    // renderPlayerCards();
+  </script>
+</body>
+</html>
