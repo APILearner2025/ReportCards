@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Player Matches Analysis</title>
@@ -11,7 +12,7 @@
       margin: 0;
       padding: 0;
     }
-    
+
     body {
       font-family: 'Roboto', sans-serif;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -20,7 +21,7 @@
       padding: 20px;
       min-height: 100vh;
     }
-    
+
     .container {
       max-width: 1400px;
       margin: 0 auto;
@@ -29,7 +30,7 @@
       padding: 20px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    
+
     header {
       text-align: center;
       margin-bottom: 30px;
@@ -38,19 +39,27 @@
       border-radius: 10px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
-    
+
     h1 {
       color: #81a1c1;
       font-size: 2.5rem;
       margin-bottom: 10px;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     }
-    
+
+    a {
+      color: #88c0d0;
+    }
+
+    a:hover {
+      color: #92b9c4;
+    }
+
     .subtitle {
       color: #88c0d0;
       font-size: 1.2rem;
     }
-    
+
     .input-section {
       background-color: #2a2a3f;
       padding: 25px;
@@ -58,7 +67,7 @@
       margin-bottom: 30px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
-    
+
     .input-header {
       display: flex;
       justify-content: space-between;
@@ -67,14 +76,14 @@
       flex-wrap: wrap;
       gap: 15px;
     }
-    
+
     .input-group {
       display: flex;
       gap: 12px;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-    
+
     .player-input {
       flex: 1;
       min-width: 300px;
@@ -86,17 +95,17 @@
       font-size: 16px;
       transition: all 0.3s ease;
     }
-    
+
     .player-input:focus {
       outline: none;
       border-color: #81a1c1;
       box-shadow: 0 0 0 3px rgba(129, 161, 193, 0.3);
     }
-    
+
     .player-input::placeholder {
       color: #7a7a8c;
     }
-    
+
     .btn {
       padding: 15px 25px;
       border: none;
@@ -108,44 +117,44 @@
       align-items: center;
       gap: 8px;
     }
-    
+
     .btn-primary {
       background-color: #5e81ac;
       color: white;
     }
-    
+
     .btn-primary:hover {
       background-color: #81a1c1;
       transform: translateY(-2px);
     }
-    
+
     .btn-success {
       background-color: #6e8c6e;
       color: white;
     }
-    
+
     .btn-success:hover {
       background-color: #81c784;
       transform: translateY(-2px);
     }
-    
+
     .btn-danger {
       background-color: #bf616a;
       color: white;
     }
-    
+
     .btn-danger:hover {
       background-color: #d08770;
       transform: translateY(-2px);
     }
-    
+
     .player-cards {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 20px;
       margin-top: 25px;
     }
-    
+
     .player-card {
       background: linear-gradient(135deg, #3b4252 0%, #434c5e 100%);
       padding: 20px;
@@ -156,17 +165,17 @@
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
       transition: transform 0.3s ease;
     }
-    
+
     .player-card:hover {
       transform: translateY(-5px);
     }
-    
+
     .player-info {
       display: flex;
       align-items: center;
       gap: 15px;
     }
-    
+
     .player-avatar {
       width: 50px;
       height: 50px;
@@ -179,24 +188,24 @@
       color: white;
       font-size: 20px;
     }
-    
+
     .player-details {
       display: flex;
       flex-direction: column;
     }
-    
+
     .player-name {
       font-weight: 500;
       color: #88c0d0;
       margin-bottom: 5px;
     }
-    
+
     .player-uuid {
       font-size: 12px;
       color: #d8dee9;
       word-break: break-all;
     }
-    
+
     .results-section {
       background-color: #2a2a3f;
       padding: 25px;
@@ -204,14 +213,14 @@
       margin-bottom: 30px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
-    
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 20px;
       margin-top: 25px;
     }
-    
+
     .stat-card {
       background: linear-gradient(135deg, #3b4252 0%, #434c5e 100%);
       padding: 20px;
@@ -219,33 +228,33 @@
       text-align: center;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
-    
+
     .stat-title {
       font-size: 14px;
       color: #b0b0b0;
       margin-bottom: 10px;
     }
-    
+
     .stat-value {
       font-size: 28px;
       font-weight: 500;
       color: #81a1c1;
     }
-    
+
     .matches-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
       gap: 25px;
       margin-top: 30px;
     }
-    
+
     .match {
       background: linear-gradient(135deg, #3b4252 0%, #434c5e 100%);
       padding: 25px;
       border-radius: 10px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
-    
+
     .match-header {
       display: flex;
       justify-content: space-between;
@@ -254,12 +263,12 @@
       padding-bottom: 15px;
       border-bottom: 2px solid #4c566a;
     }
-    
+
     .match-id {
       font-size: 16px;
       font-weight: 500;
     }
-    
+
     .match-result {
       display: flex;
       align-items: center;
@@ -267,23 +276,23 @@
       padding: 8px 16px;
       border-radius: 8px;
     }
-    
+
     .win {
       background-color: rgba(46, 125, 50, 0.3);
       color: #81c784;
     }
-    
+
     .loss {
       background-color: rgba(198, 40, 40, 0.3);
       color: #e57373;
     }
-    
+
     .stats-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
     }
-    
+
     .stats-table th {
       text-align: left;
       padding: 12px 10px;
@@ -291,72 +300,72 @@
       font-weight: 500;
       border-bottom: 2px solid #4c566a;
     }
-    
+
     .stats-table td {
       padding: 12px 10px;
       border-bottom: 1px solid #3b4252;
     }
-    
+
     .stats-table tr:last-child td {
       border-bottom: none;
     }
-    
+
     .hero-cell {
       display: flex;
       align-items: center;
     }
-    
+
     .hero-cell img {
       width: 36px;
       height: 36px;
       margin-right: 15px;
       border-radius: 8px;
     }
-    
+
     .player-name {
       font-weight: 500;
       color: #88c0d0;
     }
-    
+
     .kda {
       display: flex;
       justify-content: center;
       font-variant-numeric: tabular-nums;
       align-items: center;
     }
-    
+
     .kills {
       color: #6e8c6e;
       font-weight: 500;
     }
-    
+
     .deaths {
       color: #a05b5b;
       font-weight: 500;
     }
-    
+
     .assists {
       color: #637ea6;
       font-weight: 500;
     }
-    
+
     .slash {
       color: #e0e0e0;
       margin: 0 2px;
     }
-    
+
     .damage-number {
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
-    
+
     .loading {
       text-align: center;
       padding: 50px;
       font-size: 20px;
       color: #81a1c1;
     }
-    
+
     .error {
       background-color: #bf616a;
       color: white;
@@ -365,46 +374,48 @@
       margin: 20px 0;
       text-align: center;
     }
-    
+
     .cs-min {
       color: #d8a0a6;
       font-weight: 500;
     }
-    
+
     .hidden {
       display: none;
     }
-    
+
     @media (max-width: 768px) {
       .matches-grid {
         grid-template-columns: 1fr;
       }
-      
+
       .input-group {
         flex-direction: column;
       }
-      
+
       .player-input {
         min-width: unset;
       }
-      
+
       .stats-table {
         font-size: 12px;
       }
-      
-      .stats-table th, .stats-table td {
+
+      .stats-table th,
+      .stats-table td {
         padding: 8px 5px;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <header>
       <h1>Pred.gg Team Analysis</h1>
       <p class="subtitle">Analyze shared matches and player statistics</p>
     </header>
-    
+
     <section class="input-section">
       <div class="input-header">
         <h2>Player Profiles</h2>
@@ -412,20 +423,19 @@
           <i class="fas fa-search"></i> Search Matches
         </button>
       </div>
-      
+
       <div class="input-group">
-        <input type="text" class="player-input" id="player-url-input" 
-               placeholder="Paste player profile URL or UUID (e.g., https://pred.gg/players/ef58bd80-b37b-4da3-af1c-bf8f7351963d)">
+        <input type="text" class="player-input" id="player-url-input" placeholder="Paste player profile URL or UUID (e.g., https://pred.gg/players/ef58bd80-b37b-4da3-af1c-bf8f7351963d)">
         <button class="btn btn-primary" id="add-player">
           <i class="fas fa-plus"></i> Add Player
         </button>
       </div>
-      
+
       <div class="player-cards" id="player-cards-container">
         <!-- Player cards will be added here dynamically -->
       </div>
     </section>
-    
+
     <section class="results-section">
       <div id="summary">
         <div class="loading">Add players and click "Search Matches" to analyze</div>
@@ -455,12 +465,12 @@
           }
         }
         return null;
-      } 
+      }
       // If it's already a UUID, validate it
       else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input)) {
         return input;
       }
-      
+
       return null;
     }
 
@@ -468,23 +478,23 @@
     function addPlayer() {
       const input = playerUrlInput.value.trim();
       if (!input) return;
-      
+
       const uuid = extractUUID(input);
       if (!uuid) {
         alert('Please enter a valid player profile URL or UUID format:\n\nExample: https://pred.gg/players/ef58bd80-b37b-4da3-af1c-bf8f7351963d\nOr: ef58bd80-b37b-4da3-af1c-bf8f7351963d');
         return;
       }
-      
+
       if (playerUuids.includes(uuid)) {
         alert('This player is already in the list');
         return;
       }
-      
+
       if (playerUuids.length >= 5) {
         alert('Maximum of 5 players allowed');
         return;
       }
-      
+
       playerUuids.push(uuid);
       renderPlayerCards();
       playerUrlInput.value = '';
@@ -499,7 +509,7 @@
     // Render player cards
     function renderPlayerCards() {
       playerCardsContainer.innerHTML = '';
-      
+
       playerUuids.forEach(uuid => {
         const card = document.createElement('div');
         card.className = 'player-card';
@@ -519,7 +529,7 @@
         `;
         playerCardsContainer.appendChild(card);
       });
-      
+
       // Add event listeners to remove buttons
       document.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -611,7 +621,7 @@
       let allMatches = [];
       let offset = 0;
       const limit = 50;
-      
+
       try {
         while (true) {
           const data = await fetchGraphQL(query, {
@@ -620,15 +630,15 @@
             playerMatchesLimit: limit,
             playerMatchesFilter: { timeframe: { startTime, endTime } }
           });
-          
+
           if (!data || !data.player || !data.player.matchesPaginated) break;
-          
+
           const results = data.player.matchesPaginated.results;
           if (!results.length) break;
-          
+
           allMatches = allMatches.concat(results);
           offset += limit;
-          
+
           // Break if we've fetched enough matches
           if (results.length < limit) break;
         }
@@ -636,7 +646,7 @@
         console.error(`Error fetching matches for player ${uuid}:`, error);
         throw error;
       }
-      
+
       return allMatches;
     }
 
@@ -648,10 +658,10 @@
             return [];
           }))
         );
-        
+
         const matchMap = new Map();
         let totalSearched = 0;
-        
+
         for (const matches of allPlayerMatches) {
           totalSearched += matches.length;
           for (const { match } of matches) {
@@ -661,20 +671,20 @@
             matchMap.get(match.uuid).push(match);
           }
         }
-        
+
         const sharedMatches = [];
         for (const [uuid, matches] of matchMap) {
           if (matches.length === playerUuids.length) {
             const teams = matches[0].matchPlayers
               .filter(mp => playerUuids.includes(mp.player.uuid))
               .map(mp => mp.team);
-            
+
             if (teams.every(t => t === teams[0])) {
               sharedMatches.push(matches[0]);
             }
           }
         }
-        
+
         return { sharedMatches, totalSearched };
       } catch (error) {
         console.error("Error getting shared matches:", error);
@@ -701,10 +711,10 @@
         alert('Please add at least one player');
         return;
       }
-      
+
       const summaryContainer = document.getElementById("summary");
       summaryContainer.innerHTML = '<div class="loading">Loading match data... This may take a while</div>';
-      
+
       getSharedMatches(playerUuids, DAYS).then(({ sharedMatches, totalSearched }) => {
         let totalKills = 0, totalDeaths = 0, totalAssists = 0;
         let totalHeroDamage = 0, totalStructureDamage = 0, totalObjectiveDamage = 0;
@@ -712,7 +722,7 @@
 
         sharedMatches.forEach(match => {
           totalMatchDuration += match.duration;
-          
+
           match.matchPlayers
             .filter(mp => playerUuids.includes(mp.player.uuid))
             .forEach(mp => {
@@ -736,7 +746,7 @@
           <p>Shared matches found: ${sharedMatches.length}</p>
           <p>Total matches searched: ${totalSearched}</p>
           <p>Total K/D/A: ${totalKills}/${totalDeaths}/${totalAssists}</p>
-          
+
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-title">Total Hero Damage</div>
@@ -759,18 +769,18 @@
 
         const grid = document.getElementById("matches-grid");
         grid.innerHTML = '';
-        
+
         if (sharedMatches.length === 0) {
           grid.innerHTML = '<div class="loading">No shared matches found for the selected players</div>';
           return;
         }
-        
+
         sharedMatches.forEach(match => {
           // Determine if the team won
-          const playerTeam = match.matchPlayers.find(mp => 
+          const playerTeam = match.matchPlayers.find(mp =>
             playerUuids.includes(mp.player.uuid)
           ).team;
-          
+
           const isWin = match.winningTeam === playerTeam;
           const resultClass = isWin ? 'win' : 'loss';
           const resultIcon = isWin ? 'fa-check-circle' : 'fa-times-circle';
@@ -778,7 +788,7 @@
 
           const matchDiv = document.createElement("div");
           matchDiv.className = "match";
-          
+
           matchDiv.innerHTML = `
             <div class="match-header">
               <div class="match-id">
@@ -807,15 +817,15 @@
           `;
 
           const tbody = matchDiv.querySelector('tbody');
-          
+
           match.matchPlayers
             .filter(mp => playerUuids.includes(mp.player.uuid))
             .forEach(mp => {
               const hero = mp.hero.data;
               const csPerMin = calculateCSperMin(mp.minionsKilled, match.duration);
-              
+
               const row = document.createElement("tr");
-              
+
               row.innerHTML = `
                 <td>
                   <div class="hero-cell">
@@ -845,7 +855,7 @@
                   <div class="cs-min">(${csPerMin}/min)</div>
                 </td>
               `;
-              
+
               tbody.appendChild(row);
             });
 
@@ -874,4 +884,5 @@
     // renderPlayerCards();
   </script>
 </body>
+
 </html>
