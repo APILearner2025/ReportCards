@@ -119,16 +119,6 @@
       transform: translateY(-2px);
     }
     
-    .btn-success {
-      background-color: #6e8c6e;
-      color: white;
-    }
-    
-    .btn-success:hover {
-      background-color: #81c784;
-      transform: translateY(-2px);
-    }
-    
     .btn-danger {
       background-color: #bf616a;
       color: white;
@@ -322,6 +312,7 @@
       display: flex;
       justify-content: center;
       font-variant-numeric: tabular-nums;
+      align-items: center;
     }
     
     .kills {
@@ -374,6 +365,16 @@
       display: none;
     }
     
+    .status-indicator {
+      display: inline-block;
+      margin-left: 10px;
+      font-size: 14px;
+    }
+    
+    .searching {
+      color: #81a1c1;
+    }
+    
     @media (max-width: 768px) {
       .matches-grid {
         grid-template-columns: 1fr;
@@ -406,10 +407,7 @@
     
     <section class="input-section">
       <div class="input-header">
-        <h2>Player Profiles</h2>
-        <button class="btn btn-success" id="search-matches">
-          <i class="fas fa-search"></i> Search Matches
-        </button>
+        <h2>Player Profiles <span id="search-status" class="status-indicator"></span></h2>
       </div>
       
       <div class="input-group">
@@ -427,7 +425,7 @@
     
     <section class="results-section">
       <div id="summary">
-        <div class="loading">Add players and click "Search Matches" to analyze</div>
+        <div class="loading">Add players to analyze their shared matches</div>
       </div>
       <div class="matches-grid" id="matches-grid"></div>
     </section>
@@ -439,7 +437,8 @@
     const playerCardsContainer = document.getElementById('player-cards-container');
     const playerUrlInput = document.getElementById('player-url-input');
     const addPlayerBtn = document.getElementById('add-player');
-    const searchMatchesBtn = document.getElementById('search-matches');
+    const searchStatus = document.getElementById('search-status');
+    let isSearching = false;
 
     // Extract UUID from URL or validate UUID format
     function extractUUID(input) {
@@ -487,12 +486,18 @@
       playerUuids.push(uuid);
       renderPlayerCards();
       playerUrlInput.value = '';
+      
+      // Automatically search for matches
+      loadMatches();
     }
 
     // Remove a player from the list
     function removePlayer(uuid) {
       playerUuids = playerUuids.filter(id => id !== uuid);
       renderPlayerCards();
+      
+      // Automatically search for matches
+      loadMatches();
     }
 
     // Render player cards
@@ -697,12 +702,19 @@
     // Execute the data fetching and display
     function loadMatches() {
       if (playerUuids.length === 0) {
-        alert('Please add at least one player');
+        const summaryContainer = document.getElementById("summary");
+        summaryContainer.innerHTML = '<div class="loading">Add players to analyze their shared matches</div>';
+        document.getElementById("matches-grid").innerHTML = '';
         return;
       }
       
+      // Show searching status
+      isSearching = true;
+      searchStatus.textContent = "Searching...";
+      searchStatus.className = "status-indicator searching";
+      
       const summaryContainer = document.getElementById("summary");
-      summaryContainer.innerHTML = '<div class="loading">Loading match data... This may take a while</div>';
+      summaryContainer.innerHTML = '<div class="loading">Searching for shared matches... This may take a while</div>';
       
       getSharedMatches(playerUuids, DAYS).then(({ sharedMatches, totalSearched }) => {
         let totalKills = 0, totalDeaths = 0, totalAssists = 0;
@@ -827,12 +839,14 @@
                     </div>
                   </div>
                 </td>
-                <td class="kda">
-                  <span class="kills">${mp.kills}</span>
-                  <span class="slash">/</span>
-                  <span class="deaths">${mp.deaths}</span>
-                  <span class="slash">/</span>
-                  <span class="assists">${mp.assists}</span>
+                <td>
+                    <div class="kda">
+                        <span class="kills">${mp.kills}</span>
+                        <span class="slash">/</span>
+                        <span class="deaths">${mp.deaths</span>
+                        <span class="slash">/</span>
+                        <span class="assists">${mp.assists}</span>
+                    </div>
                 </td>
                 <td class="damage-number">${mp.heroDamage.toLocaleString()}</td>
                 <td class="damage-number">${mp.totalDamageDealtToStructures.toLocaleString()}</td>
@@ -857,18 +871,16 @@
           </div>
         `;
         console.error(err);
+      }).finally(() => {
+        // Clear searching status
+        isSearching = false;
+        searchStatus.textContent = "";
+        searchStatus.className = "status-indicator";
       });
     }
 
-    // Add event listener for the search button
-    searchMatchesBtn.addEventListener('click', loadMatches);
-
-    // Initialize with some example players if needed
-    // playerUuids = [
-    //   "c11d9836-d777-4752-8c77-8ae2c0d35ab2",
-    //   "394737c4-f8f3-4c70-8dec-71908e7ff60f"
-    // ];
-    // renderPlayerCards();
+    // Initialize with empty player list
+    renderPlayerCards();
   </script>
 </body>
 </html>
