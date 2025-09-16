@@ -322,6 +322,7 @@
       display: flex;
       justify-content: center;
       font-variant-numeric: tabular-nums;
+      align-items: center;
     }
     
     .kills {
@@ -827,12 +828,14 @@
                     </div>
                   </div>
                 </td>
-                <td class="kda">
-                  <span class="kills">${mp.kills}</span>
-                  <span class="slash">/</span>
-                  <span class="deaths">${mp.deaths}</span>
-                  <span class="slash">/</span>
-                  <span class="assists">${mp.assists}</span>
+                <td>
+                    <div class="kda">
+                        <span class="kills">${mp.kills}</span>
+                        <span class="slash">/</span>
+                        <span class="deaths">${mp.deaths}</span>
+                        <span class="slash">/</span>
+                        <span class="assists">${mp.assists}</span>
+                    </div>
                 </td>
                 <td class="damage-number">${mp.heroDamage.toLocaleString()}</td>
                 <td class="damage-number">${mp.totalDamageDealtToStructures.toLocaleString()}</td>
