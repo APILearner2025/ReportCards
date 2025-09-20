@@ -253,6 +253,37 @@
       return hash ? `https://pred.gg/assets/${hash}.webp` : '';
     }
 
+    async function getAccessToken() {
+      const tokenUrl = 'https://pred.gg/api/oauth2/token'; // Replace with your OAuth server's token URL
+      const clientId = 'yc1bxmxwqiw01igf23nbavobwy6lvhe6'; // Your client ID
+      const clientSecret = 'ommpwilb29mfylrtjeldpqqfc11zbhqs'; // Your client secret
+
+      const params = new URLSearchParams();
+      params.append('grant_type', 'client_credentials');
+      params.append('client_id', clientId);
+      params.append('client_secret', clientSecret);
+
+      try {
+        const response = await fetch(tokenUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: params.toString(),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return data.access_token; // Access token for making subsequent API calls
+        } else {
+          throw new Error('Failed to fetch access token');
+        }
+      } catch (error) {
+        console.error('Error fetching access token:', error);
+        return null;
+      }
+    }
+
     const query = `
       query PlayerProfileMatches(
         $uuid: UUID!
@@ -301,11 +332,22 @@
     `;
 
     async function fetchGraphQL(query, variables) {
+      const token = await getAccessToken(); // Get the access token
+
+      if (!token) {
+        console.error('No access token available');
+        return;
+      }
+
       const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Use the token in the Authorization header
+        },
         body: JSON.stringify({ query, variables })
       });
+
       const json = await response.json();
       if (json.errors) throw new Error(JSON.stringify(json.errors));
       return json.data;
