@@ -215,12 +215,13 @@
       #matches-grid {
         grid-template-columns: 1fr;
       }
-      
+
       .stats-table {
         font-size: 12px;
       }
-      
-      .stats-table th, .stats-table td {
+
+      .stats-table th,
+      .stats-table td {
         padding: 8px 4px;
       }
     }
@@ -230,7 +231,7 @@
 <body>
   <div class="container">
     <h1>Team Match Analysis</h1>
-    
+
     <div id="summary">
       <div class="loading">Loading match data...</div>
     </div>
@@ -254,74 +255,67 @@
     }
 
     async function getAccessToken() {
-      const tokenUrl = 'https://pred.gg/api/oauth2/token'; // Replace with your OAuth server's token URL
-      const clientId = 'yc1bxmxwqiw01igf23nbavobwy6lvhe6'; // Your client ID
-      const clientSecret = 'ommpwilb29mfylrtjeldpqqfc11zbhqs'; // Your client secret
+      const tokenUrl = 'https://pred.gg/api/oauth2/token';
+      const clientId = 'yc1bxmxwqiw01igf23nbavobwy6lvhe6';
+      const clientSecret = 'ommpwilb29mfylrtjeldpqqfc11zbhqs';
 
-      const params = new URLSearchParams();
-      params.append('grant_type', 'client_credentials');
-      params.append('client_id', clientId);
-      params.append('client_secret', clientSecret);
+      const basicAuth = 'Basic ' + btoa(`${clientId}:${clientSecret}`);
 
-      try {
-        const response = await fetch(tokenUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: params.toString(),
-        });
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': basicAuth,
+        },
+        body: new URLSearchParams({ grant_type: 'client_credentials' }).toString(),
+      });
 
-        if (response.ok) {
-          const data = await response.json();
-          return data.access_token; // Access token for making subsequent API calls
-        } else {
-          throw new Error('Failed to fetch access token');
-        }
-      } catch (error) {
-        console.error('Error fetching access token:', error);
-        return null;
+      if (!response.ok) {
+        console.error(await response.text());
+        throw new Error('Failed to fetch access token');
       }
+
+      const data = await response.json();
+      return data.access_token;
     }
 
     const query = `
-      query PlayerProfileMatches(
-        $uuid: UUID!
-        $playerMatchesOffset: Int
-        $playerMatchesLimit: Int
-        $playerMatchesFilter: PlayerMatchesFilterInput
-      ) {
-        player(by: { uuid: $uuid }) {
-          matchesPaginated(offset: $playerMatchesOffset, limit: $playerMatchesLimit, filter: $playerMatchesFilter) {
-            results {
-              match {
-                id
-                uuid
-                duration
-                gameMode
-                region
-                winningTeam
-                endTime
-                matchPlayers {
-                  player {
-                    uuid
-                    name
-                  }
-                  team
-                  kills
-                  deaths
-                  assists
-                  heroDamage
-                  totalDamageDealtToStructures
-                  totalDamageDealtToObjectives
-                  minionsKilled
-                  hero {
-                    id
-                    slug
-                    data {
-                      icon
-                      displayName
-                    }
+    query PlayerProfileMatches(
+      $uuid: UUID!
+      $playerMatchesOffset: Int
+      $playerMatchesLimit: Int
+      $playerMatchesFilter: PlayerMatchesFilterInput
+    ) {
+      player(by: { uuid: $uuid }) {
+        matchesPaginated(offset: $playerMatchesOffset, limit: $playerMatchesLimit, filter: $playerMatchesFilter) {
+          results {
+            match {
+              id
+              uuid
+              duration
+              gameMode
+              region
+              winningTeam
+              endTime
+              matchPlayers {
+                player {
+                  uuid
+                  name
+                }
+                team
+                kills
+                deaths
+                assists
+                heroDamage
+                totalDamageDealtToStructures
+                totalDamageDealtToObjectives
+                minionsKilled
+                hero {
+                  id
+                  slug
+                  data {
+                    icon
+                    displayName
                   }
                 }
               }
@@ -329,25 +323,19 @@
           }
         }
       }
-    `;
+    }
+  `;
 
     async function fetchGraphQL(query, variables) {
-      const token = await getAccessToken(); // Get the access token
-
-      if (!token) {
-        console.error('No access token available');
-        return;
-      }
-
+      const token = await getAccessToken();
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Use the token in the Authorization header
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ query, variables })
       });
-
       const json = await response.json();
       if (json.errors) throw new Error(JSON.stringify(json.errors));
       return json.data;
@@ -359,7 +347,7 @@
       let allMatches = [];
       let offset = 0;
       const limit = 50;
-      
+
       try {
         while (true) {
           const data = await fetchGraphQL(query, {
@@ -377,7 +365,7 @@
       } catch (error) {
         console.error(`Error fetching matches for player ${uuid}:`, error);
       }
-      
+
       return allMatches;
     }
 
@@ -386,7 +374,7 @@
         const allPlayerMatches = await Promise.all(playerUuids.map(uuid => getPlayerMatches(uuid, days)));
         const matchMap = new Map();
         let totalSearched = 0;
-        
+
         for (const matches of allPlayerMatches) {
           totalSearched += matches.length;
           for (const { match } of matches) {
@@ -394,7 +382,7 @@
             matchMap.get(match.uuid).push(match);
           }
         }
-        
+
         const sharedMatches = [];
         for (const [uuid, matches] of matchMap) {
           if (matches.length === playerUuids.length) {
@@ -402,7 +390,7 @@
             if (teams.every(t => t === teams[0])) sharedMatches.push(matches[0]);
           }
         }
-        
+
         return { sharedMatches, totalSearched };
       } catch (error) {
         console.error("Error getting shared matches:", error);
@@ -431,7 +419,7 @@
 
       sharedMatches.forEach(match => {
         totalMatchDuration += match.duration;
-        
+
         match.matchPlayers
           .filter(mp => playerUuids.includes(mp.player.uuid))
           .forEach(mp => {
@@ -455,7 +443,7 @@
         <p>Shared matches found: ${sharedMatches.length}</p>
         <p>Total matches searched: ${totalSearched}</p>
         <p>Total K/D/A: ${totalKills}/${totalDeaths}/${totalAssists}</p>
-        
+
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-title">Total Hero Damage</div>
@@ -477,18 +465,18 @@
       `;
 
       const grid = document.getElementById("matches-grid");
-      
+
       if (sharedMatches.length === 0) {
         grid.innerHTML = '<div class="loading">No shared matches found for the selected players</div>';
         return;
       }
-      
+
       sharedMatches.forEach(match => {
         // Determine if the team won
-        const playerTeam = match.matchPlayers.find(mp => 
+        const playerTeam = match.matchPlayers.find(mp =>
           playerUuids.includes(mp.player.uuid)
         ).team;
-        
+
         const isWin = match.winningTeam === playerTeam;
         const resultClass = isWin ? 'win' : 'loss';
         const resultIcon = isWin ? 'fa-check-circle' : 'fa-times-circle';
@@ -496,7 +484,7 @@
 
         const matchDiv = document.createElement("div");
         matchDiv.className = "match";
-        
+
         matchDiv.innerHTML = `
           <div class="match-header">
             <div class="match-id">
@@ -525,15 +513,15 @@
         `;
 
         const tbody = matchDiv.querySelector('tbody');
-        
+
         match.matchPlayers
           .filter(mp => playerUuids.includes(mp.player.uuid))
           .forEach(mp => {
             const hero = mp.hero.data;
             const csPerMin = calculateCSperMin(mp.minionsKilled, match.duration);
-            
+
             const row = document.createElement("tr");
-            
+
             row.innerHTML = `
               <td>
                 <div class="hero-cell">
@@ -561,7 +549,7 @@
                 <div class="cs-min">(${csPerMin}/min)</div>
               </td>
             `;
-            
+
             tbody.appendChild(row);
           });
 
