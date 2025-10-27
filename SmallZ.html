@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Player Matches Analysis</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        background-color: #1e1e2f;
+        color: #e0e0e0;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        color: #81a1c1;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      #summary {
+        background-color: #2a2a3f;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      }
+
+      #summary p {
+        font-size: 16px;
+        margin: 8px 0;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .stat-card {
+        background-color: #2d2d45;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .stat-title {
+        font-size: 14px;
+        color: #b0b0b0;
+        margin-bottom: 8px;
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: 500;
+        color: #81a1c1;
+      }
+
+      #matches-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(650px, 1fr));
+        gap: 20px;
+      }
+
+      .match {
+        background-color: #2a2a3f;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .match-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #3e3e5f;
+      }
+
+      .match-id {
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .match-result {
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        padding: 6px 12px;
+        border-radius: 6px;
+      }
+
+      .win {
+        background-color: rgba(46, 125, 50, 0.3);
+        color: #81c784;
+      }
+
+      .loss {
+        background-color: rgba(198, 40, 40, 0.3);
+        color: #e57373;
+      }
+
+      .match a {
+        color: #81a1c1;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .match a:hover {
+        color: #5e81ac;
+        text-decoration: underline;
+      }
+
+      .stats-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      .stats-table th {
+        text-align: left;
+        padding: 10px 8px;
+        color: #b0b0b0;
+        font-weight: 500;
+        border-bottom: 1px solid #3e3e5f;
+      }
+
+      .stats-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #2d2d45;
+      }
+
+      .stats-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .hero-cell {
+        display: flex;
+        align-items: center;
+      }
+
+      .hero-cell img {
+        width: 32px;
+        height: 32px;
+        margin-right: 12px;
+        border-radius: 6px;
+      }
+
+      .player-name {
+        font-weight: 500;
+      }
+
+      .kda {
+        display: flex;
+        justify-content: center;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .kills {
+        color: #6e8c6e;
+        font-weight: 500;
+      }
+
+      .deaths {
+        color: #a05b5b;
+        font-weight: 500;
+      }
+
+      .assists {
+        color: #637ea6;
+        font-weight: 500;
+      }
+
+      .slash {
+        color: #e0e0e0;
+        margin: 0 2px;
+      }
+
+      .damage-number {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        font-size: 18px;
+        color: #81a1c1;
+      }
+
+      .error {
+        background-color: #a05b5b;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+
+      .cs-min {
+        color: #d8a0a6;
+        font-weight: 500;
+      }
+
+      @media (max-width: 768px) {
+        #matches-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stats-table {
+          font-size: 12px;
+        }
+
+        .stats-table th,
+        .stats-table td {
+          padding: 8px 4px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Team Match Analysis</h1>
+
+      <div id="summary">
+        <div class="loading">Loading match data...</div>
+      </div>
+      <div id="matches-grid"></div>
+    </div>
+
+    <script>
+      const endpoint = "https://pred.gg/gql";
+      const DAYS = 30; // Extended timeframe for more data
+      const MATCH_LIMIT = 100; // Increased limit to get more matches
+
+      function getAssetPath(hash) {
+        return hash ? `https://pred.gg/assets/${hash}.webp` : "";
+      }
+
+      async function getAccessToken() {
+        const tokenUrl = "https://pred.gg/api/oauth2/token";
+        const clientId = "yc1bxmxwqiw01igf23nbavobwy6lvhe6";
+        const clientSecret = "ommpwilb29mfylrtjeldpqqfc11zbhqs";
+
+        const basicAuth = "Basic " + btoa(`${clientId}:${clientSecret}`);
+
+        const response = await fetch(tokenUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Authorization: basicAuth,
+          },
+          body: new URLSearchParams({
+            grant_type: "client_credentials",
+          }).toString(),
+        });
+
+        if (!response.ok) {
+          console.error(await response.text());
+          throw new Error("Failed to fetch access token");
+        }
+
+        const data = await response.json();
+        return data.access_token;
+      }
+
+      // Query to get ARAM matches with player win data
+      const aramMatchesQuery = `
+    query TopAramPlayers($limit: Int, $offset: Int, $timeframe: TimeframeInput) {
+      matchesPaginated(limit: $limit, offset: $offset, filter: {gameMode: ARAM, timeframe: $timeframe}) {
+        results {
+          uuid
+          duration
+          endTime
+          winningTeam
+          matchPlayers {
+            player {
+              uuid
+              name
+            }
+            team
+            hero {
+              data {
+                displayName
+                icon
+              }
+            }
+            kills
+            deaths
+            assists
+            minionsKilled
+            heroDamage
+          }
+        }
+        totalCount
+      }
+    }
+  `;
+
+      async function fetchGraphQL(query, variables) {
+        const token = await getAccessToken();
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ query, variables }),
+        });
+        const json = await response.json();
+        if (json.errors) throw new Error(JSON.stringify(json.errors));
+        return json.data;
+      }
+
+      async function getTopAramPlayers() {
+        const endTime = new Date().toISOString();
+        const startTime = new Date(
+          Date.now() - DAYS * 24 * 60 * 60 * 1000
+        ).toISOString();
+
+        const playerStats = new Map(); // Map to track player statistics
+
+        try {
+          let offset = 0;
+          let hasMoreMatches = true;
+          let matchesProcessed = 0;
+
+          while (hasMoreMatches && matchesProcessed < MATCH_LIMIT) {
+            const data = await fetchGraphQL(aramMatchesQuery, {
+              limit: 50,
+              offset: offset,
+              timeframe: { startTime, endTime },
+            });
+
+            if (
+              !data ||
+              !data.matchesPaginated ||
+              !data.matchesPaginated.results.length
+            ) {
+              hasMoreMatches = false;
+              break;
+            }
+
+            const matches = data.matchesPaginated.results;
+            matchesProcessed += matches.length;
+
+            // Process each match
+            for (const match of matches) {
+              for (const mp of match.matchPlayers) {
+                const playerId = mp.player.uuid;
+                const playerName = mp.player.name;
+                const isWin = mp.team === match.winningTeam;
+
+                if (!playerStats.has(playerId)) {
+                  playerStats.set(playerId, {
+                    name: playerName,
+                    wins: 0,
+                    losses: 0,
+                    totalMatches: 0,
+                    totalKills: 0,
+                    totalDeaths: 0,
+                    totalAssists: 0,
+                    totalHeroDamage: 0,
+                    totalMinionsKilled: 0,
+                    heroesPlayed: new Map(),
+                    lastPlayed: new Date(match.endTime),
+                  });
+                }
+
+                const stats = playerStats.get(playerId);
+                stats.totalMatches++;
+
+                if (isWin) {
+                  stats.wins++;
+                } else {
+                  stats.losses++;
+                }
+
+                stats.totalKills += mp.kills;
+                stats.totalDeaths += mp.deaths;
+                stats.totalAssists += mp.assists;
+                stats.totalHeroDamage += mp.heroDamage;
+                stats.totalMinionsKilled += mp.minionsKilled;
+
+                // Update last played date if this match is newer
+                const matchDate = new Date(match.endTime);
+                if (matchDate > stats.lastPlayed) {
+                  stats.lastPlayed = matchDate;
+                }
+
+                // Track hero usage
+                const heroName = mp.hero.data.displayName;
+                if (stats.heroesPlayed.has(heroName)) {
+                  stats.heroesPlayed.set(
+                    heroName,
+                    stats.heroesPlayed.get(heroName) + 1
+                  );
+                } else {
+                  stats.heroesPlayed.set(heroName, 1);
+                }
+              }
+            }
+
+            offset += 50;
+
+            // Safety break to prevent infinite loops
+            if (matches.length < 50) {
+              hasMoreMatches = false;
+            }
+          }
+
+          return Array.from(playerStats.entries()).map(([uuid, stats]) => ({
+            uuid,
+            ...stats,
+            winRate: ((stats.wins / stats.totalMatches) * 100).toFixed(1),
+            kda:
+              stats.totalDeaths === 0
+                ? (stats.totalKills + stats.totalAssists).toFixed(2)
+                : (
+                    (stats.totalKills + stats.totalAssists) /
+                    stats.totalDeaths
+                  ).toFixed(2),
+            avgHeroDamage: Math.round(
+              stats.totalHeroDamage / stats.totalMatches
+            ),
+            favoriteHero: Array.from(stats.heroesPlayed.entries()).sort(
+              (a, b) => b[1] - a[1]
+            )[0][0],
+          }));
+        } catch (error) {
+          console.error("Error fetching ARAM matches:", error);
+          throw error;
+        }
+      }
+
+      // Format time from seconds to MM:SS
+      function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+      }
+
+      // Execute the data fetching and display
+      getTopAramPlayers()
+        .then((players) => {
+          // Sort players by wins (descending)
+          const topPlayers = players
+            .filter((player) => player.totalMatches >= 5) // Only include players with at least 5 games
+            .sort((a, b) => b.wins - a.wins)
+            .slice(0, 50); // Top 50 players
+
+          const summaryContainer = document.getElementById("summary");
+          summaryContainer.innerHTML = `
+        <h2>🏆 Top ARAM Players (Last ${DAYS} Days)</h2>
+        <p>Total players analyzed: ${players.length}</p>
+        <p>Showing top ${topPlayers.length} players by wins</p>
+        <p>Minimum 5 games played</p>
+      `;
+
+          const grid = document.getElementById("matches-grid");
+          grid.innerHTML = ""; // Clear previous content
+
+          if (topPlayers.length === 0) {
+            grid.innerHTML =
+              '<div class="loading">No ARAM matches found in the specified timeframe</div>';
+            return;
+          }
+
+          // Create table for top players
+          const table = document.createElement("table");
+          table.className = "top-players-table";
+
+          table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Wins</th>
+            <th>Losses</th>
+            <th>Win Rate</th>
+            <th>Total Matches</th>
+            <th>KDA</th>
+            <th>Avg Hero Damage</th>
+            <th>Favorite Hero</th>
+            <th>Last Played</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${topPlayers
+            .map(
+              (player, index) => `
+            <tr>
+              <td class="rank">#${index + 1}</td>
+              <td class="player-info">
+                <a class="player-name" href="https://pred.gg/players/${
+                  player.uuid
+                }" target="_blank">
+                  ${player.name}
+                </a>
+              </td>
+              <td class="wins">${player.wins}</td>
+              <td class="losses">${player.losses}</td>
+              <td class="win-rate ${
+                parseFloat(player.winRate) >= 50 ? "positive" : "negative"
+              }">
+                ${player.winRate}%
+              </td>
+              <td>${player.totalMatches}</td>
+              <td class="kda">${player.kda}</td>
+              <td class="damage">${player.avgHeroDamage.toLocaleString()}</td>
+              <td class="hero">${player.favoriteHero}</td>
+              <td class="last-played">${player.lastPlayed.toLocaleDateString()}</td>
+            </tr>
+          `
+            )
+            .join("")}
+        </tbody>
+      `;
+
+          grid.appendChild(table);
+
+          // Add some basic styling
+          const style = document.createElement("style");
+          style.textContent = `
+        .top-players-table {
+          width: 100%;
+          border-collapse: collapse;
+          background: #1a1a1a;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        .top-players-table th {
+          background: #2a2a2a;
+          padding: 12px;
+          text-align: left;
+          font-weight: 600;
+          color: #fff;
+          border-bottom: 2px solid #333;
+        }
+        .top-players-table td {
+          padding: 12px;
+          border-bottom: 1px solid #333;
+          color: #ccc;
+        }
+        .top-players-table tr:hover {
+          background: #2a2a2a;
+        }
+        .rank {
+          font-weight: bold;
+          color: #ffd700;
+        }
+        .wins {
+          color: #4CAF50;
+          font-weight: bold;
+        }
+        .losses {
+          color: #f44336;
+        }
+        .win-rate.positive {
+          color: #4CAF50;
+          font-weight: bold;
+        }
+        .win-rate.negative {
+          color: #f44336;
+        }
+        .kda {
+          color: #ffa500;
+          font-weight: bold;
+        }
+        .damage {
+          color: #e91e63;
+        }
+        .player-name {
+          color: #fff;
+          text-decoration: none;
+          font-weight: bold;
+        }
+        .player-name:hover {
+          color: #ffa500;
+        }
+        .hero {
+          color: #9c27b0;
+        }
+        .last-played {
+          color: #888;
+          font-size: 0.9em;
+        }
+      `;
+          document.head.appendChild(style);
+        })
+        .catch((err) => {
+          document.getElementById(
+            "summary"
+          ).innerHTML = `<div class="error">Error: ${err.message}</div>`;
+          console.error(err);
+        });
+    </script>
+  </body>
+</html>
