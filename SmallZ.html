@@ -245,8 +245,15 @@
 
     <script>
       const endpoint = "https://pred.gg/gql";
-      const DAYS = 30; // Extended timeframe for more data
-      const MATCH_LIMIT = 500; // Increased limit to get more matches
+      const PLAYER_UUIDS = [
+        "72890d83-6edd-4d26-b747-f9fe65da64fa",
+        "eb8434a3-52e0-46de-a4bd-18feb627f694",
+        "64469def-f40d-49ae-a505-b3d83d28ad40",
+        "10df9935-5564-4756-9a71-b91e5f3f85d0",
+        "eef2ee34-466a-49e3-8cc2-0f3c524bc532",
+      ]; // We'll analyze these specific players
+
+      const DAYS = 30;
 
       function getAssetPath(hash) {
         return hash ? `https://pred.gg/assets/${hash}.webp` : "";
@@ -279,35 +286,46 @@
         return data.access_token;
       }
 
-      // Query to get ARAM matches with player win data
-      const aramMatchesQuery = `
-    query TopAramPlayers($limit: Int, $offset: Int, $timeframe: TimeframeInput) {
-      matchesPaginated(limit: $limit, offset: $offset, filter: {gameMode: ARAM, timeframe: $timeframe}) {
-        results {
-          uuid
-          duration
-          endTime
-          winningTeam
-          matchPlayers {
-            player {
+      // Query to get player matches with ARAM filtering
+      const playerMatchesQuery = `
+    query PlayerMatches($uuid: UUID!, $offset: Int, $limit: Int) {
+      player(by: { uuid: $uuid }) {
+        matchesPaginated(offset: $offset, limit: $limit) {
+          results {
+            match {
+              id
               uuid
-              name
-            }
-            team
-            hero {
-              data {
-                displayName
-                icon
+              duration
+              gameMode
+              region
+              winningTeam
+              endTime
+              matchPlayers {
+                player {
+                  uuid
+                  name
+                }
+                team
+                kills
+                deaths
+                assists
+                heroDamage
+                totalDamageDealtToStructures
+                totalDamageDealtToObjectives
+                minionsKilled
+                hero {
+                  id
+                  slug
+                  data {
+                    icon
+                    displayName
+                  }
+                }
               }
             }
-            kills
-            deaths
-            assists
-            minionsKilled
-            heroDamage
           }
+          totalCount
         }
-        totalCount
       }
     }
   `;
@@ -327,163 +345,171 @@
         return json.data;
       }
 
-      async function getTopAramPlayers() {
-        const endTime = new Date().toISOString();
-        const startTime = new Date(
-          Date.now() - DAYS * 24 * 60 * 60 * 1000
-        ).toISOString();
-
-        const playerStats = new Map(); // Map to track player statistics
+      async function getPlayerMatches(uuid, limit = 100) {
+        let allMatches = [];
+        let offset = 0;
+        const batchSize = 50;
 
         try {
-          let offset = 0;
-          let hasMoreMatches = true;
-          let matchesProcessed = 0;
-
-          while (hasMoreMatches && matchesProcessed < MATCH_LIMIT) {
-            const data = await fetchGraphQL(aramMatchesQuery, {
-              limit: 50,
-              offset: offset,
-              timeframe: { startTime, endTime },
+          while (allMatches.length < limit) {
+            const data = await fetchGraphQL(playerMatchesQuery, {
+              uuid,
+              offset,
+              limit: batchSize,
             });
 
             if (
               !data ||
-              !data.matchesPaginated ||
-              !data.matchesPaginated.results.length
+              !data.player ||
+              !data.player.matchesPaginated ||
+              !data.player.matchesPaginated.results.length
             ) {
-              hasMoreMatches = false;
               break;
             }
 
-            const matches = data.matchesPaginated.results;
-            matchesProcessed += matches.length;
+            const results = data.player.matchesPaginated.results;
+            allMatches = allMatches.concat(results);
 
-            // Process each match
-            for (const match of matches) {
-              for (const mp of match.matchPlayers) {
-                const playerId = mp.player.uuid;
-                const playerName = mp.player.name;
-                const isWin = mp.team === match.winningTeam;
-
-                if (!playerStats.has(playerId)) {
-                  playerStats.set(playerId, {
-                    name: playerName,
-                    wins: 0,
-                    losses: 0,
-                    totalMatches: 0,
-                    totalKills: 0,
-                    totalDeaths: 0,
-                    totalAssists: 0,
-                    totalHeroDamage: 0,
-                    totalMinionsKilled: 0,
-                    heroesPlayed: new Map(),
-                    lastPlayed: new Date(match.endTime),
-                  });
-                }
-
-                const stats = playerStats.get(playerId);
-                stats.totalMatches++;
-
-                if (isWin) {
-                  stats.wins++;
-                } else {
-                  stats.losses++;
-                }
-
-                stats.totalKills += mp.kills;
-                stats.totalDeaths += mp.deaths;
-                stats.totalAssists += mp.assists;
-                stats.totalHeroDamage += mp.heroDamage;
-                stats.totalMinionsKilled += mp.minionsKilled;
-
-                // Update last played date if this match is newer
-                const matchDate = new Date(match.endTime);
-                if (matchDate > stats.lastPlayed) {
-                  stats.lastPlayed = matchDate;
-                }
-
-                // Track hero usage
-                const heroName = mp.hero.data.displayName;
-                if (stats.heroesPlayed.has(heroName)) {
-                  stats.heroesPlayed.set(
-                    heroName,
-                    stats.heroesPlayed.get(heroName) + 1
-                  );
-                } else {
-                  stats.heroesPlayed.set(heroName, 1);
-                }
-              }
+            // Stop if we've gotten all matches or reached our limit
+            if (results.length < batchSize || allMatches.length >= limit) {
+              break;
             }
 
-            offset += 50;
-
-            // Safety break to prevent infinite loops
-            if (matches.length < 50) {
-              hasMoreMatches = false;
-            }
+            offset += batchSize;
           }
 
-          return Array.from(playerStats.entries()).map(([uuid, stats]) => ({
-            uuid,
-            ...stats,
-            winRate: ((stats.wins / stats.totalMatches) * 100).toFixed(1),
-            kda:
-              stats.totalDeaths === 0
-                ? (stats.totalKills + stats.totalAssists).toFixed(2)
-                : (
-                    (stats.totalKills + stats.totalAssists) /
-                    stats.totalDeaths
-                  ).toFixed(2),
-            avgHeroDamage: Math.round(
-              stats.totalHeroDamage / stats.totalMatches
-            ),
-            favoriteHero: Array.from(stats.heroesPlayed.entries()).sort(
-              (a, b) => b[1] - a[1]
-            )[0][0],
-          }));
+          // Filter for ARAM matches only and within timeframe
+          const cutoffDate = new Date(Date.now() - DAYS * 24 * 60 * 60 * 1000);
+          return allMatches
+            .filter(({ match }) => match.gameMode === "ARAM")
+            .filter(({ match }) => new Date(match.endTime) >= cutoffDate);
         } catch (error) {
-          console.error("Error fetching ARAM matches:", error);
+          console.error(`Error fetching matches for player ${uuid}:`, error);
+          return [];
+        }
+      }
+
+      async function getAramLeaderboard() {
+        try {
+          // Get ARAM matches for all players
+          const allPlayerMatches = await Promise.all(
+            PLAYER_UUIDS.map((uuid) => getPlayerMatches(uuid))
+          );
+
+          // Calculate stats for each player
+          const playerStats = PLAYER_UUIDS.map((uuid, index) => {
+            const matches = allPlayerMatches[index];
+            const aramMatches = matches.filter(
+              ({ match }) => match.gameMode === "ARAM"
+            );
+
+            let wins = 0;
+            let losses = 0;
+            let totalKills = 0;
+            let totalDeaths = 0;
+            let totalAssists = 0;
+            let totalHeroDamage = 0;
+            let totalMinionsKilled = 0;
+            const heroesPlayed = new Map();
+
+            aramMatches.forEach(({ match }) => {
+              const playerMatchData = match.matchPlayers.find(
+                (mp) => mp.player.uuid === uuid
+              );
+              if (playerMatchData) {
+                const isWin = playerMatchData.team === match.winningTeam;
+
+                if (isWin) wins++;
+                else losses++;
+
+                totalKills += playerMatchData.kills;
+                totalDeaths += playerMatchData.deaths;
+                totalAssists += playerMatchData.assists;
+                totalHeroDamage += playerMatchData.heroDamage;
+                totalMinionsKilled += playerMatchData.minionsKilled;
+
+                // Track hero usage
+                const heroName = playerMatchData.hero.data.displayName;
+                heroesPlayed.set(
+                  heroName,
+                  (heroesPlayed.get(heroName) || 0) + 1
+                );
+              }
+            });
+
+            const totalMatches = wins + losses;
+            const winRate =
+              totalMatches > 0
+                ? ((wins / totalMatches) * 100).toFixed(1)
+                : "0.0";
+            const kda =
+              totalDeaths === 0
+                ? (totalKills + totalAssists).toFixed(2)
+                : ((totalKills + totalAssists) / totalDeaths).toFixed(2);
+            const avgHeroDamage =
+              totalMatches > 0 ? Math.round(totalHeroDamage / totalMatches) : 0;
+
+            const favoriteHero =
+              heroesPlayed.size > 0
+                ? Array.from(heroesPlayed.entries()).sort(
+                    (a, b) => b[1] - a[1]
+                  )[0][0]
+                : "None";
+
+            return {
+              uuid,
+              name:
+                aramMatches.length > 0
+                  ? aramMatches[0].match.matchPlayers.find(
+                      (mp) => mp.player.uuid === uuid
+                    ).player.name
+                  : "Unknown",
+              wins,
+              losses,
+              totalMatches,
+              winRate,
+              kda,
+              avgHeroDamage,
+              totalHeroDamage,
+              favoriteHero,
+              totalKills,
+              totalDeaths,
+              totalAssists,
+            };
+          });
+
+          return playerStats.filter((player) => player.totalMatches > 0);
+        } catch (error) {
+          console.error("Error generating ARAM leaderboard:", error);
           throw error;
         }
       }
 
-      // Format time from seconds to MM:SS
-      function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, "0")}`;
-      }
-
       // Execute the data fetching and display
-      getTopAramPlayers()
+      getAramLeaderboard()
         .then((players) => {
-          // Sort players by wins (descending)
-          const topPlayers = players
-            .filter((player) => player.totalMatches >= 5) // Only include players with at least 5 games
-            .sort((a, b) => b.wins - a.wins)
-            .slice(0, 50); // Top 50 players
+          // Sort by wins (descending)
+          const sortedPlayers = players.sort((a, b) => b.wins - a.wins);
 
           const summaryContainer = document.getElementById("summary");
           summaryContainer.innerHTML = `
-        <h2>🏆 Top ARAM Players (Last ${DAYS} Days)</h2>
-        <p>Total players analyzed: ${players.length}</p>
-        <p>Showing top ${topPlayers.length} players by wins</p>
-        <p>Minimum 5 games played</p>
+        <h2>🏆 ARAM Leaderboard (Last ${DAYS} Days)</h2>
+        <p>Tracking ${PLAYER_UUIDS.length} players</p>
+        <p>Timeframe: Last ${DAYS} days • Game Mode: ARAM Only</p>
       `;
 
           const grid = document.getElementById("matches-grid");
-          grid.innerHTML = ""; // Clear previous content
+          grid.innerHTML = "";
 
-          if (topPlayers.length === 0) {
+          if (sortedPlayers.length === 0) {
             grid.innerHTML =
-              '<div class="loading">No ARAM matches found in the specified timeframe</div>';
+              '<div class="loading">No ARAM matches found for the selected players in the specified timeframe</div>';
             return;
           }
 
-          // Create table for top players
+          // Create leaderboard table
           const table = document.createElement("table");
-          table.className = "top-players-table";
+          table.className = "aram-leaderboard";
 
           table.innerHTML = `
         <thead>
@@ -495,13 +521,13 @@
             <th>Win Rate</th>
             <th>Total Matches</th>
             <th>KDA</th>
-            <th>Avg Hero Damage</th>
+            <th>Avg Damage</th>
+            <th>Total K/D/A</th>
             <th>Favorite Hero</th>
-            <th>Last Played</th>
           </tr>
         </thead>
         <tbody>
-          ${topPlayers
+          ${sortedPlayers
             .map(
               (player, index) => `
             <tr>
@@ -523,8 +549,10 @@
               <td>${player.totalMatches}</td>
               <td class="kda">${player.kda}</td>
               <td class="damage">${player.avgHeroDamage.toLocaleString()}</td>
+              <td class="total-kda">${player.totalKills}/${
+                player.totalDeaths
+              }/${player.totalAssists}</td>
               <td class="hero">${player.favoriteHero}</td>
-              <td class="last-played">${player.lastPlayed.toLocaleDateString()}</td>
             </tr>
           `
             )
@@ -534,56 +562,70 @@
 
           grid.appendChild(table);
 
-          // Add some basic styling
+          // Add CSS styling
           const style = document.createElement("style");
           style.textContent = `
-        .top-players-table {
+        .aram-leaderboard {
           width: 100%;
           border-collapse: collapse;
           background: #1a1a1a;
           border-radius: 8px;
           overflow: hidden;
+          font-size: 14px;
         }
-        .top-players-table th {
+        .aram-leaderboard th {
           background: #2a2a2a;
-          padding: 12px;
+          padding: 12px 8px;
           text-align: left;
           font-weight: 600;
           color: #fff;
           border-bottom: 2px solid #333;
+          white-space: nowrap;
         }
-        .top-players-table td {
-          padding: 12px;
+        .aram-leaderboard td {
+          padding: 10px 8px;
           border-bottom: 1px solid #333;
           color: #ccc;
         }
-        .top-players-table tr:hover {
+        .aram-leaderboard tr:hover {
           background: #2a2a2a;
         }
         .rank {
           font-weight: bold;
           color: #ffd700;
+          text-align: center;
         }
         .wins {
           color: #4CAF50;
           font-weight: bold;
+          text-align: center;
         }
         .losses {
           color: #f44336;
+          text-align: center;
         }
         .win-rate.positive {
           color: #4CAF50;
           font-weight: bold;
+          text-align: center;
         }
         .win-rate.negative {
           color: #f44336;
+          text-align: center;
         }
         .kda {
           color: #ffa500;
           font-weight: bold;
+          text-align: center;
         }
         .damage {
           color: #e91e63;
+          text-align: center;
+        }
+        .total-kda {
+          text-align: center;
+          font-size: 12px;
+          color: #bbb;
         }
         .player-name {
           color: #fff;
@@ -595,10 +637,18 @@
         }
         .hero {
           color: #9c27b0;
+          text-align: center;
         }
-        .last-played {
+        .loading {
+          text-align: center;
+          padding: 40px;
           color: #888;
-          font-size: 0.9em;
+          font-size: 16px;
+        }
+        .error {
+          color: #f44336;
+          padding: 20px;
+          text-align: center;
         }
       `;
           document.head.appendChild(style);
